@@ -40,7 +40,7 @@ const tarifaFromDB = (row: any): Tarifa => ({
 });
 
 const tarifaToDB = (t: Tarifa) => ({
-  id: t.id,
+  id: t.id || crypto.randomUUID(), // Generar ID si no existe
   empleado_id: t.empleadoId,
   valor_hora: t.valorHora,
   valor_viatico: t.valorViatico,
@@ -69,18 +69,18 @@ const pagoFromDB = (row: any): Pago => ({
 });
 
 const pagoToDB = (p: Pago) => ({
-  id: p.id,
+  id: p.id || crypto.randomUUID(), // Generar ID si no existe
   empleado_id: p.empleadoId,
-  fecha: p.fecha.split("T")[0], // Solo la fecha, sin hora
-  valor_hora: p.valorHora,
-  valor_hora_con_antiguedad: p.valorHoraConAntiguedad,
-  valor_viatico: p.valorViatico,
-  antiguedad: p.antiguedad,
-  total: p.total,
-  asistio: p.asistio,
+  fecha: p.fecha?.includes("T") ? p.fecha.split("T")[0] : p.fecha, // Solo la fecha, sin hora
+  valor_hora: p.valorHora || 0,
+  valor_hora_con_antiguedad: p.valorHoraConAntiguedad || p.valorHora || 0,
+  valor_viatico: p.valorViatico || 0,
+  antiguedad: p.antiguedad || 0,
+  total: p.total || 0,
+  asistio: p.asistio ?? true,
   comprobante_pago: p.comprobantePago || null,
-  tipo_pago: p.tipoPago,
-  es_aporte: p.esAporte,
+  tipo_pago: p.tipoPago || "trabajo",
+  es_aporte: p.esAporte || false,
   horas_trabajadas: p.horasTrabajadas || null,
   monto_aporte: p.montoAporte || null,
   mes: p.mes || null,
