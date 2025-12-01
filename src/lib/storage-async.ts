@@ -344,23 +344,50 @@ export const exportBackup = async (): Promise<BackupData> => {
 
 export const importBackup = async (data: BackupData): Promise<void> => {
   if (isSupabaseEnabled() && supabase) {
+    // Limpiar datos existentes - usar select primero para evitar 404 en tablas vacías
     try {
-      // Limpiar datos existentes (usando gte en vez de neq para evitar 404)
-      await supabase
+      const { data: existingPagos } = await supabase
         .from("pagos")
-        .delete()
-        .gte("id", "00000000-0000-0000-0000-000000000000");
-      await supabase
-        .from("tarifas")
-        .delete()
-        .gte("id", "00000000-0000-0000-0000-000000000000");
-      await supabase
-        .from("empleados")
-        .delete()
-        .gte("id", "00000000-0000-0000-0000-000000000000");
+        .select("id")
+        .limit(1);
+      if (existingPagos && existingPagos.length > 0) {
+        await supabase
+          .from("pagos")
+          .delete()
+          .neq("id", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+      }
     } catch (e) {
-      // Ignorar errores de delete si las tablas están vacías
-      console.log("Tables might be empty, continuing with import...");
+      /* ignorar */
+    }
+
+    try {
+      const { data: existingTarifas } = await supabase
+        .from("tarifas")
+        .select("id")
+        .limit(1);
+      if (existingTarifas && existingTarifas.length > 0) {
+        await supabase
+          .from("tarifas")
+          .delete()
+          .neq("id", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+      }
+    } catch (e) {
+      /* ignorar */
+    }
+
+    try {
+      const { data: existingEmpleados } = await supabase
+        .from("empleados")
+        .select("id")
+        .limit(1);
+      if (existingEmpleados && existingEmpleados.length > 0) {
+        await supabase
+          .from("empleados")
+          .delete()
+          .neq("id", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+      }
+    } catch (e) {
+      /* ignorar */
     }
 
     // Insertar empleados
