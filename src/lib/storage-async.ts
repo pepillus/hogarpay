@@ -344,10 +344,30 @@ export const exportBackup = async (): Promise<BackupData> => {
 
 export const importBackup = async (data: BackupData): Promise<void> => {
   if (isSupabaseEnabled() && supabase) {
-    // Limpiar TODOS los datos existentes usando NOT NULL en id (siempre es true)
-    await supabase.from("pagos").delete().not("id", "is", null);
-    await supabase.from("tarifas").delete().not("id", "is", null);
-    await supabase.from("empleados").delete().not("id", "is", null);
+    // Limpiar datos existentes (ignorar errores si las tablas están vacías)
+    const { error: delPagos } = await supabase
+      .from("pagos")
+      .delete()
+      .not("id", "is", null);
+    if (delPagos && delPagos.code !== "PGRST116") {
+      console.warn("Error deleting pagos (ignorado):", delPagos);
+    }
+
+    const { error: delTarifas } = await supabase
+      .from("tarifas")
+      .delete()
+      .not("id", "is", null);
+    if (delTarifas && delTarifas.code !== "PGRST116") {
+      console.warn("Error deleting tarifas (ignorado):", delTarifas);
+    }
+
+    const { error: delEmpleados } = await supabase
+      .from("empleados")
+      .delete()
+      .not("id", "is", null);
+    if (delEmpleados && delEmpleados.code !== "PGRST116") {
+      console.warn("Error deleting empleados (ignorado):", delEmpleados);
+    }
 
     // Insertar empleados
     if (data.empleados?.length) {
