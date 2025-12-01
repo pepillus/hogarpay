@@ -344,51 +344,10 @@ export const exportBackup = async (): Promise<BackupData> => {
 
 export const importBackup = async (data: BackupData): Promise<void> => {
   if (isSupabaseEnabled() && supabase) {
-    // Limpiar datos existentes - usar select primero para evitar 404 en tablas vacías
-    try {
-      const { data: existingPagos } = await supabase
-        .from("pagos")
-        .select("id")
-        .limit(1);
-      if (existingPagos && existingPagos.length > 0) {
-        await supabase
-          .from("pagos")
-          .delete()
-          .neq("id", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
-      }
-    } catch (e) {
-      /* ignorar */
-    }
-
-    try {
-      const { data: existingTarifas } = await supabase
-        .from("tarifas")
-        .select("id")
-        .limit(1);
-      if (existingTarifas && existingTarifas.length > 0) {
-        await supabase
-          .from("tarifas")
-          .delete()
-          .neq("id", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
-      }
-    } catch (e) {
-      /* ignorar */
-    }
-
-    try {
-      const { data: existingEmpleados } = await supabase
-        .from("empleados")
-        .select("id")
-        .limit(1);
-      if (existingEmpleados && existingEmpleados.length > 0) {
-        await supabase
-          .from("empleados")
-          .delete()
-          .neq("id", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
-      }
-    } catch (e) {
-      /* ignorar */
-    }
+    // Limpiar TODOS los datos existentes usando NOT NULL en id (siempre es true)
+    await supabase.from("pagos").delete().not("id", "is", null);
+    await supabase.from("tarifas").delete().not("id", "is", null);
+    await supabase.from("empleados").delete().not("id", "is", null);
 
     // Insertar empleados
     if (data.empleados?.length) {
