@@ -148,8 +148,8 @@ export function ArcaDeducciones() {
     const aportes = pagosFiltrados.filter(p => p.tipoPago === 'aporte');
     const trabajos = pagosFiltrados.filter(p => p.tipoPago === 'trabajo' && p.asistio);
 
-    // Calcular contribución (suma de aportes del mes)
-    const contribucion = aportes.reduce((sum, p) => sum + p.total, 0);
+    // Calcular contribución (suma de montoAporte del mes)
+    const contribucion = aportes.reduce((sum, p) => sum + (p.montoAporte || 0), 0);
 
     // Calcular monto transferido (suma de pagos de trabajo)
     const montoTransferido = trabajos.reduce((sum, p) => sum + p.total, 0);
