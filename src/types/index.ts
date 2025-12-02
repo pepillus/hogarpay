@@ -27,7 +27,7 @@ export interface Pago {
   total: number;
   asistio: boolean;
   comprobantePago?: string;
-  tipoPago: 'trabajo' | 'aporte';
+  tipoPago: "trabajo" | "aporte";
   esAporte: boolean;
   horasTrabajadas?: number;
   montoAporte?: number;
@@ -39,6 +39,16 @@ export interface BackupData {
   empleados: Empleado[];
   tarifas: Tarifa[];
   pagos: Pago[];
+  comprobantesEducacion?: ComprobanteEducacion[];
   fechaBackup: string;
   version: string;
+}
+
+export interface ComprobanteEducacion {
+  id: string;
+  fecha: string;
+  tipoFactura: "A" | "B" | "C";
+  numeroComprobante: string; // Formato: 0005-00171315
+  monto: number;
+  descripcion?: string;
 }

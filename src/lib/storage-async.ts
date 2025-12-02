@@ -1,4 +1,10 @@
-import { Empleado, Tarifa, Pago, BackupData } from "@/types";
+import {
+  Empleado,
+  Tarifa,
+  Pago,
+  BackupData,
+  ComprobanteEducacion,
+} from "@/types";
 import { supabase, isSupabaseEnabled } from "./supabase";
 
 // Keys de localStorage (fallback)
@@ -6,6 +12,7 @@ const STORAGE_KEYS = {
   EMPLEADOS: "hogarpay-empleados",
   TARIFAS: "hogarpay-tarifas",
   PAGOS: "hogarpay-pagos",
+  COMPROBANTES_EDUCACION: "hogarpay-comprobantes-educacion",
 } as const;
 
 // ============ HELPERS DE CONVERSIÓN ============
@@ -330,6 +337,102 @@ export const deletePago = async (id: string): Promise<void> => {
   localStorage.setItem(STORAGE_KEYS.PAGOS, JSON.stringify(pagos));
 };
 
+// ============ COMPROBANTES DE EDUCACIÓN ============
+
+const comprobanteEducacionFromDB = (row: any): ComprobanteEducacion => ({
+  id: row.id,
+  fecha: row.fecha,
+  tipoFactura: row.tipo_factura,
+  numeroComprobante: row.numero_comprobante,
+  monto: parseFloat(row.monto),
+  descripcion: row.descripcion || undefined,
+});
+
+const comprobanteEducacionToDB = (c: ComprobanteEducacion) => ({
+  id: c.id || crypto.randomUUID(),
+  fecha: c.fecha?.includes("T") ? c.fecha.split("T")[0] : c.fecha,
+  tipo_factura: c.tipoFactura,
+  numero_comprobante: c.numeroComprobante,
+  monto: c.monto,
+  descripcion: c.descripcion || null,
+});
+
+export const getComprobantesEducacion = async (): Promise<
+  ComprobanteEducacion[]
+> => {
+  if (isSupabaseEnabled() && supabase) {
+    const { data, error } = await supabase
+      .from("comprobantes_educacion")
+      .select("*")
+      .order("fecha", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching comprobantes educacion:", error);
+      return [];
+    }
+    return (data || []).map(comprobanteEducacionFromDB);
+  }
+
+  // Fallback a localStorage
+  const data = localStorage.getItem(STORAGE_KEYS.COMPROBANTES_EDUCACION);
+  return data ? JSON.parse(data) : [];
+};
+
+export const saveComprobanteEducacion = async (
+  comprobante: ComprobanteEducacion
+): Promise<void> => {
+  if (isSupabaseEnabled() && supabase) {
+    const { error } = await supabase
+      .from("comprobantes_educacion")
+      .upsert(comprobanteEducacionToDB(comprobante));
+
+    if (error) {
+      console.error("Error saving comprobante educacion:", error);
+      throw error;
+    }
+    return;
+  }
+
+  // Fallback a localStorage
+  const comprobantes = await getComprobantesEducacion();
+  const index = comprobantes.findIndex((c) => c.id === comprobante.id);
+
+  if (index >= 0) {
+    comprobantes[index] = comprobante;
+  } else {
+    comprobantes.push(comprobante);
+  }
+
+  localStorage.setItem(
+    STORAGE_KEYS.COMPROBANTES_EDUCACION,
+    JSON.stringify(comprobantes)
+  );
+};
+
+export const deleteComprobanteEducacion = async (id: string): Promise<void> => {
+  if (isSupabaseEnabled() && supabase) {
+    const { error } = await supabase
+      .from("comprobantes_educacion")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error deleting comprobante educacion:", error);
+      throw error;
+    }
+    return;
+  }
+
+  // Fallback a localStorage
+  const comprobantes = (await getComprobantesEducacion()).filter(
+    (c) => c.id !== id
+  );
+  localStorage.setItem(
+    STORAGE_KEYS.COMPROBANTES_EDUCACION,
+    JSON.stringify(comprobantes)
+  );
+};
+
 // ============ BACKUP ============
 
 export const exportBackup = async (): Promise<BackupData> => {
@@ -337,6 +440,7 @@ export const exportBackup = async (): Promise<BackupData> => {
     empleados: await getEmpleados(),
     tarifas: await getTarifas(),
     pagos: await getPagos(),
+    comprobantesEducacion: await getComprobantesEducacion(),
     fechaBackup: new Date().toISOString(),
     version: "1.0.0",
   };
@@ -401,6 +505,28 @@ export const importBackup = async (data: BackupData): Promise<void> => {
         throw pagError;
       }
     }
+
+    // Limpiar e insertar comprobantes de educación
+    const { error: delCompEdu } = await supabase
+      .from("comprobantes_educacion")
+      .delete()
+      .not("id", "is", null);
+    if (delCompEdu && delCompEdu.code !== "PGRST116") {
+      console.warn(
+        "Error deleting comprobantes_educacion (ignorado):",
+        delCompEdu
+      );
+    }
+
+    if (data.comprobantesEducacion?.length) {
+      const { error: compEduError } = await supabase
+        .from("comprobantes_educacion")
+        .insert(data.comprobantesEducacion.map(comprobanteEducacionToDB));
+      if (compEduError) {
+        console.error("Error inserting comprobantes_educacion:", compEduError);
+        throw compEduError;
+      }
+    }
     return;
   }
 
@@ -416,6 +542,12 @@ export const importBackup = async (data: BackupData): Promise<void> => {
   }
   if (data.pagos) {
     localStorage.setItem(STORAGE_KEYS.PAGOS, JSON.stringify(data.pagos));
+  }
+  if (data.comprobantesEducacion) {
+    localStorage.setItem(
+      STORAGE_KEYS.COMPROBANTES_EDUCACION,
+      JSON.stringify(data.comprobantesEducacion)
+    );
   }
 };
 
