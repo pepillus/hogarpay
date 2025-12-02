@@ -118,7 +118,11 @@ export function HistorialPagos() {
       if (filtroAnio !== 'todos' && anioPago !== parseInt(filtroAnio)) return false;
       
       // Filtro "solo meses sin aporte"
-      if (soloMesesSinAporte && pago.tipoPago === 'trabajo') {
+      if (soloMesesSinAporte) {
+        // Solo mostrar pagos de trabajo, nunca aportes
+        if (pago.tipoPago === 'aporte') return false;
+        
+        // Verificar si el mes tiene aporte
         const tieneAporte = pagos.some(p => 
           p.empleadoId === pago.empleadoId &&
           p.tipoPago === 'aporte' &&
