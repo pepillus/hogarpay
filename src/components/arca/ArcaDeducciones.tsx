@@ -62,6 +62,12 @@ import { cn } from "@/lib/utils";
 // CUIT del colegio para gastos de educación
 const CUIT_COLEGIO = "30529042759";
 
+// Helper para parsear fecha sin problemas de timezone
+const parseFechaLocal = (fechaStr: string): { year: number; month: number; day: number } => {
+  const [year, month, day] = fechaStr.split('T')[0].split('-').map(Number);
+  return { year, month, day };
+};
+
 export function ArcaDeducciones() {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [pagos, setPagos] = useState<Pago[]>([]);
@@ -102,7 +108,7 @@ export function ArcaDeducciones() {
   }, []);
 
   // Obtener años únicos de los pagos
-  const aniosDisponibles = [...new Set(pagos.map(p => new Date(p.fecha).getFullYear()))]
+  const aniosDisponibles = [...new Set(pagos.map(p => parseFechaLocal(p.fecha).year))]
     .sort((a, b) => b - a);
 
   // Si no hay años en pagos, usar el año actual
@@ -136,11 +142,11 @@ export function ArcaDeducciones() {
 
     // Filtrar pagos del empleado en el mes/año seleccionado
     const pagosFiltrados = pagos.filter(p => {
-      const fechaPago = new Date(p.fecha);
+      const { year, month } = parseFechaLocal(p.fecha);
       return (
         p.empleadoId === empleadoSeleccionado &&
-        fechaPago.getMonth() + 1 === mes &&
-        fechaPago.getFullYear() === anio
+        month === mes &&
+        year === anio
       );
     });
 
