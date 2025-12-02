@@ -1,4 +1,4 @@
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { 
   UserRound, 
   Calculator, 
@@ -7,10 +7,15 @@ import {
   FileChartLine, 
   Download,
   Home,
-  Landmark
+  Landmark,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { signOut } from "@/lib/auth";
+import { isSupabaseEnabled } from "@/lib/supabase";
 
 interface NavItemProps {
   to: string;
@@ -36,6 +41,13 @@ const NavItem = ({ to, icon, label, isActive }: NavItemProps) => (
 
 export function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
   
   const navItems = [
     { to: "/", icon: <Home className="h-4 w-4" />, label: "Inicio" },
@@ -57,17 +69,31 @@ export function AppLayout() {
             <Link to="/" className="text-2xl font-bold mb-4 sm:mb-0">
               HogarPay Manager
             </Link>
-            <nav className="flex flex-wrap items-center gap-1">
-              {navItems.map((item) => (
-                <NavItem
-                  key={item.to}
-                  to={item.to}
-                  icon={item.icon}
-                  label={item.label}
-                  isActive={location.pathname === item.to}
-                />
-              ))}
-            </nav>
+            <div className="flex flex-wrap items-center gap-1">
+              <nav className="flex flex-wrap items-center gap-1">
+                {navItems.map((item) => (
+                  <NavItem
+                    key={item.to}
+                    to={item.to}
+                    icon={item.icon}
+                    label={item.label}
+                    isActive={location.pathname === item.to}
+                  />
+                ))}
+              </nav>
+              {isSupabaseEnabled() && user && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="ml-2 text-gray-200 hover:bg-hogar-600 hover:text-white"
+                  title={user.email || "Cerrar sesión"}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="ml-1 hidden md:inline">Salir</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
