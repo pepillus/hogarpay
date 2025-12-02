@@ -79,9 +79,17 @@ export function HistorialPagos() {
     return empleado ? `${empleado.nombre} ${empleado.apellido}` : "Desconocido";
   };
 
+  // Helper para parsear fecha sin problemas de timezone
+  const parseFechaLocal = (fechaStr: string): Date => {
+    // Si es formato ISO con T, extraer solo la parte de fecha
+    const soloFecha = fechaStr.includes('T') ? fechaStr.split('T')[0] : fechaStr;
+    const [year, month, day] = soloFecha.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Obtener años únicos de los pagos
   const aniosUnicos = [...new Set(pagos.map(p => {
-    const fecha = new Date(p.fecha);
+    const fecha = parseFechaLocal(p.fecha);
     return fecha.getFullYear();
   }))].sort((a, b) => b - a);
 
@@ -91,13 +99,22 @@ export function HistorialPagos() {
       // Filtro por empleado
       if (filtroEmpleado !== 'todos' && pago.empleadoId !== filtroEmpleado) return false;
       
-      // Filtro por mes
-      const fechaPago = new Date(pago.fecha);
-      const mesPago = fechaPago.getMonth() + 1;
-      if (filtroMes !== 'todos' && mesPago !== parseInt(filtroMes)) return false;
+      // Filtro por mes - usar mes/anio guardados para aportes, fecha para trabajo
+      let mesPago: number;
+      let anioPago: number;
       
-      // Filtro por año
-      const anioPago = fechaPago.getFullYear();
+      if (pago.tipoPago === 'aporte' && pago.mes && pago.anio) {
+        // Para aportes, usar el mes/anio guardados explícitamente
+        mesPago = pago.mes;
+        anioPago = pago.anio;
+      } else {
+        // Para trabajo, usar la fecha
+        const fechaPago = parseFechaLocal(pago.fecha);
+        mesPago = fechaPago.getMonth() + 1;
+        anioPago = fechaPago.getFullYear();
+      }
+      
+      if (filtroMes !== 'todos' && mesPago !== parseInt(filtroMes)) return false;
       if (filtroAnio !== 'todos' && anioPago !== parseInt(filtroAnio)) return false;
       
       // Filtro "solo meses sin aporte"
@@ -310,7 +327,10 @@ export function HistorialPagos() {
                       <span className="text-gray-500">No asistió</span>
                     )
                   ) : (
-                    format(new Date(pago.fecha), "MMMM yyyy", { locale: es })
+                    // Para aportes, usar mes/anio guardados en lugar de parsear la fecha
+                    pago.mes && pago.anio 
+                      ? format(new Date(pago.anio, pago.mes - 1, 1), "MMMM yyyy", { locale: es })
+                      : format(parseFechaLocal(pago.fecha), "MMMM yyyy", { locale: es })
                   )}
                 </TableCell>
                 <TableCell className="text-right font-bold">

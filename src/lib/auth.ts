@@ -8,7 +8,10 @@ export interface AuthState {
 }
 
 // Iniciar sesión con email y password
-export const signIn = async (email: string, password: string): Promise<{ user: User | null; error: string | null }> => {
+export const signIn = async (
+  email: string,
+  password: string
+): Promise<{ user: User | null; error: string | null }> => {
   if (!isSupabaseEnabled() || !supabase) {
     return { user: null, error: "Supabase no está configurado" };
   }
@@ -26,7 +29,10 @@ export const signIn = async (email: string, password: string): Promise<{ user: U
 };
 
 // Registrar nuevo usuario
-export const signUp = async (email: string, password: string): Promise<{ user: User | null; error: string | null }> => {
+export const signUp = async (
+  email: string,
+  password: string
+): Promise<{ user: User | null; error: string | null }> => {
   if (!isSupabaseEnabled() || !supabase) {
     return { user: null, error: "Supabase no está configurado" };
   }
