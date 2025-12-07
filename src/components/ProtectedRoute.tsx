@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { isSupabaseEnabled } from "@/lib/supabase";
+import { isAuthRequired } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
@@ -10,8 +10,8 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, loading } = useAuth();
 
-  // Si Supabase no está configurado, permitir acceso (modo local)
-  if (!isSupabaseEnabled()) {
+  // Si no se requiere auth (local o VITE_SKIP_AUTH=true), permitir acceso
+  if (!isAuthRequired()) {
     return <>{children}</>;
   }
 

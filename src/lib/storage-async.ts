@@ -65,7 +65,7 @@ const pagoFromDB = (row: any): Pago => ({
   total: parseFloat(row.total),
   asistio: row.asistio,
   comprobantePago: row.comprobante_pago || undefined,
-  tipoPago: row.tipo_pago as "trabajo" | "aporte",
+  tipoPago: row.tipo_pago as "trabajo" | "aporte" | "aguinaldo",
   esAporte: row.es_aporte,
   horasTrabajadas: row.horas_trabajadas
     ? parseFloat(row.horas_trabajadas)
@@ -73,6 +73,12 @@ const pagoFromDB = (row: any): Pago => ({
   montoAporte: row.monto_aporte ? parseFloat(row.monto_aporte) : undefined,
   mes: row.mes || undefined,
   anio: row.anio || undefined,
+  // Campos de aguinaldo
+  semestreAguinaldo: row.semestre_aguinaldo || undefined,
+  estadoAguinaldo: row.estado_aguinaldo || undefined,
+  montoCalculado: row.monto_calculado
+    ? parseFloat(row.monto_calculado)
+    : undefined,
 });
 
 const pagoToDB = (p: Pago) => ({
@@ -92,6 +98,10 @@ const pagoToDB = (p: Pago) => ({
   monto_aporte: p.montoAporte || null,
   mes: p.mes || null,
   anio: p.anio || null,
+  // Campos de aguinaldo
+  semestre_aguinaldo: p.semestreAguinaldo || null,
+  estado_aguinaldo: p.estadoAguinaldo || null,
+  monto_calculado: p.montoCalculado || null,
 });
 
 // ============ EMPLEADOS ============

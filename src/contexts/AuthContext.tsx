@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { getUser, onAuthStateChange } from "@/lib/auth";
-import { isSupabaseEnabled } from "@/lib/supabase";
+import { isAuthRequired } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -32,8 +32,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Si Supabase no está habilitado, no requerimos auth
-    if (!isSupabaseEnabled()) {
+    // Si no se requiere auth (local o VITE_SKIP_AUTH=true), no verificamos
+    if (!isAuthRequired()) {
       setLoading(false);
       return;
     }

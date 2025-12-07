@@ -301,34 +301,40 @@ export function PagoForm() {
 
     setSavingAguinaldo(true);
 
-    const nuevoAguinaldo: Pago = {
-      id: info.aguinaldoExistente?.id || crypto.randomUUID(),
-      empleadoId,
-      fecha: fechaAguinaldo.toISOString(),
-      valorHora: 0,
-      valorHoraConAntiguedad: 0,
-      valorViatico: 0,
-      antiguedad: 0,
-      total: monto,
-      asistio: true,
-      comprobantePago: comprobanteAguinaldo || undefined,
-      tipoPago: 'aguinaldo',
-      esAporte: false,
-      semestreAguinaldo: editandoAguinaldo,
-      estadoAguinaldo: 'pagado',
-      montoCalculado: info.montoCalculado,
-      anio: parseInt(anioAguinaldo),
-    };
+    try {
+      const nuevoAguinaldo: Pago = {
+        id: info.aguinaldoExistente?.id || crypto.randomUUID(),
+        empleadoId,
+        fecha: fechaAguinaldo.toISOString(),
+        valorHora: 0,
+        valorHoraConAntiguedad: 0,
+        valorViatico: 0,
+        antiguedad: 0,
+        total: monto,
+        asistio: true,
+        comprobantePago: comprobanteAguinaldo || undefined,
+        tipoPago: 'aguinaldo',
+        esAporte: false,
+        semestreAguinaldo: editandoAguinaldo,
+        estadoAguinaldo: 'pagado',
+        montoCalculado: info.montoCalculado,
+        anio: parseInt(anioAguinaldo),
+      };
 
-    await savePagoAsync(nuevoAguinaldo);
-    
-    // Refrescar pagos
-    const nuevos = await getPagosAsync();
-    setPagos(nuevos);
-    
-    setSavingAguinaldo(false);
-    setEditandoAguinaldo(null);
-    toast.success("Aguinaldo registrado correctamente");
+      await savePagoAsync(nuevoAguinaldo);
+      
+      // Refrescar pagos
+      const nuevos = await getPagosAsync();
+      setPagos(nuevos);
+      
+      setEditandoAguinaldo(null);
+      toast.success("Aguinaldo registrado correctamente");
+    } catch (error) {
+      console.error("Error guardando aguinaldo:", error);
+      toast.error("Error al guardar el aguinaldo");
+    } finally {
+      setSavingAguinaldo(false);
+    }
   };
 
   const cancelarEdicionAguinaldo = () => {
