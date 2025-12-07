@@ -27,12 +27,16 @@ export interface Pago {
   total: number;
   asistio: boolean;
   comprobantePago?: string;
-  tipoPago: "trabajo" | "aporte";
+  tipoPago: "trabajo" | "aporte" | "aguinaldo";
   esAporte: boolean;
   horasTrabajadas?: number;
   montoAporte?: number;
   mes?: number;
   anio?: number;
+  // Campos específicos para aguinaldo
+  semestreAguinaldo?: 1 | 2; // 1 = Junio (Dic-May), 2 = Diciembre (Jun-Nov)
+  estadoAguinaldo?: "pendiente" | "pagado";
+  montoCalculado?: number; // El monto original calculado (50% del mejor sueldo)
 }
 
 export interface BackupData {

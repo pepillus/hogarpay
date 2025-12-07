@@ -163,7 +163,7 @@ export function HistorialPagos() {
     const rows = pagosFiltrados.map(pago => [
       formatDate(pago.fecha),
       getEmpleadoNombre(pago.empleadoId),
-      pago.tipoPago === 'trabajo' ? 'Trabajo' : 'Aporte Mensual',
+      pago.tipoPago === 'trabajo' ? 'Trabajo' : pago.tipoPago === 'aporte' ? 'Aporte Mensual' : 'Aguinaldo',
       pago.horasTrabajadas?.toString() || '',
       pago.valorHora.toFixed(2),
       pago.valorViatico.toFixed(2),
@@ -319,8 +319,8 @@ export function HistorialPagos() {
                 <TableCell>{formatDate(pago.fecha)}</TableCell>
                 <TableCell>{getEmpleadoNombre(pago.empleadoId)}</TableCell>
                 <TableCell>
-                  <Badge variant={pago.tipoPago === 'trabajo' ? 'default' : 'secondary'}>
-                    {pago.tipoPago === 'trabajo' ? 'Trabajo' : 'Aporte Mensual'}
+                  <Badge variant={pago.tipoPago === 'trabajo' ? 'default' : pago.tipoPago === 'aporte' ? 'secondary' : 'outline'}>
+                    {pago.tipoPago === 'trabajo' ? 'Trabajo' : pago.tipoPago === 'aporte' ? 'Aporte Mensual' : 'Aguinaldo'}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -330,11 +330,14 @@ export function HistorialPagos() {
                     ) : (
                       <span className="text-gray-500">No asistió</span>
                     )
-                  ) : (
+                  ) : pago.tipoPago === 'aporte' ? (
                     // Para aportes, usar mes/anio guardados en lugar de parsear la fecha
                     pago.mes && pago.anio 
                       ? format(new Date(pago.anio, pago.mes - 1, 1), "MMMM yyyy", { locale: es })
                       : format(parseFechaLocal(pago.fecha), "MMMM yyyy", { locale: es })
+                  ) : (
+                    // Para aguinaldos
+                    `${pago.semestreAguinaldo === 1 ? 'Junio' : 'Diciembre'} ${pago.anio}`
                   )}
                 </TableCell>
                 <TableCell className="text-right font-bold">
