@@ -87,11 +87,82 @@ export function HistorialPagos() {
     return new Date(year, month - 1, day);
   };
 
-  // Obtener años únicos de los pagos
-  const aniosUnicos = [...new Set(pagos.map(p => {
-    const fecha = parseFechaLocal(p.fecha);
-    return fecha.getFullYear();
-  }))].sort((a, b) => b - a);
+  // Obtener meses/años disponibles según filtro de "solo meses sin aporte"
+  const obtenerMesesDisponibles = () => {
+    if (!soloMesesSinAporte) {
+      // Mostrar todos los meses
+      return meses;
+    }
+
+    // Obtener todos los aportes
+    const aportes = pagos.filter(p => p.tipoPago === 'aporte');
+    
+    // Si hay empleado seleccionado, filtrar por ese empleado
+    const aportesRelevantes = filtroEmpleado !== 'todos'
+      ? aportes.filter(a => a.empleadoId === filtroEmpleado)
+      : aportes;
+
+    // Obtener meses que tienen aporte
+    const mesesConAporte = new Set(
+      aportesRelevantes.map(a => a.mes).filter((m): m is number => m !== undefined)
+    );
+
+    // Retornar solo meses sin aporte
+    return meses.filter(m => !mesesConAporte.has(parseInt(m.value)));
+  };
+
+  const obtenerAniosDisponibles = () => {
+    // Obtener años únicos de los pagos
+    const todosLosAnios = [...new Set(pagos.map(p => {
+      const fecha = parseFechaLocal(p.fecha);
+      return fecha.getFullYear();
+    }))].sort((a, b) => b - a);
+
+    if (!soloMesesSinAporte) {
+      return todosLosAnios;
+    }
+
+    // Obtener todos los aportes
+    const aportes = pagos.filter(p => p.tipoPago === 'aporte');
+    
+    // Si hay empleado seleccionado, filtrar por ese empleado
+    const aportesRelevantes = filtroEmpleado !== 'todos'
+      ? aportes.filter(a => a.empleadoId === filtroEmpleado)
+      : aportes;
+
+    // Si hay filtro de mes, obtener años que NO tienen aporte en ese mes
+    if (filtroMes !== 'todos') {
+      const mesSeleccionado = parseInt(filtroMes);
+      const aniosConAporteEnMes = new Set(
+        aportesRelevantes
+          .filter(a => a.mes === mesSeleccionado)
+          .map(a => a.anio)
+          .filter((anio): anio is number => anio !== undefined)
+      );
+      return todosLosAnios.filter(anio => !aniosConAporteEnMes.has(anio));
+    }
+
+    // Sin filtro de mes, obtener años que tienen al menos un mes sin aporte
+    const aniosConAporte = new Set(
+      aportesRelevantes.map(a => a.anio).filter((anio): anio is number => anio !== undefined)
+    );
+    
+    // Retornar años que existen en pagos pero no tienen aportes
+    // O años que tienen aportes pero no en todos los meses
+    return todosLosAnios.filter(anio => {
+      if (!aniosConAporte.has(anio)) return true; // Año sin ningún aporte
+      
+      // Verificar si hay al menos un mes sin aporte en este año
+      const aportesEnAnio = aportesRelevantes.filter(a => a.anio === anio);
+      const mesesConAporteEnAnio = new Set(aportesEnAnio.map(a => a.mes));
+      
+      // Si hay menos de 12 meses con aporte, hay meses disponibles
+      return mesesConAporteEnAnio.size < 12;
+    });
+  };
+
+  const aniosUnicos = obtenerAniosDisponibles();
+  const mesesDisponibles = obtenerMesesDisponibles();
 
   // Filtrar pagos
   const pagosFiltrados = pagos
@@ -260,7 +331,7 @@ export function HistorialPagos() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos</SelectItem>
-              {meses.map((mes) => (
+              {mesesDisponibles.map((mes) => (
                 <SelectItem key={mes.value} value={mes.value}>
                   {mes.label}
                 </SelectItem>
