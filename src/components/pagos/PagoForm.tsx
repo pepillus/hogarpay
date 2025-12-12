@@ -117,7 +117,8 @@ export function PagoForm() {
   const empleadoId = form.watch("empleadoId");
   const asistio = form.watch("asistio");
   const horasTrabajadas = form.watch("horasTrabajadas") || 0;
-  const montoAporte = form.watch("montoAporte") || 0;
+  const montoAporteRaw = form.watch("montoAporte");
+  const montoAporte = typeof montoAporteRaw === 'number' ? montoAporteRaw : (montoAporteRaw ? parseFloat(String(montoAporteRaw)) : 0) || 0;
 
   useEffect(() => {
     const loadData = async () => {
