@@ -358,9 +358,16 @@ export function PagoForm() {
     ? (tarifaActual 
         ? calcularTotalTrabajo(valorHoraConAntiguedad, horasTrabajadas, tarifaActual.valorViatico, asistio)
         : 0)
-    : montoAporte;
+    : tipoPagoActivo === 'aporte' 
+      ? montoAporte 
+      : 0; // Aguinaldo tiene su propio cálculo
 
   const onSubmit = async (values: PagoFormValues) => {
+    // El aguinaldo tiene su propio flujo, no usar este submit
+    if (tipoPagoActivo === 'aguinaldo') {
+      return;
+    }
+
     if (!tarifaActual) {
       toast.error("El empleado no tiene tarifa configurada");
       return;
@@ -381,6 +388,11 @@ export function PagoForm() {
     } else {
       // Para aporte, usar el primer día del mes seleccionado
       const [mes, anio] = (values.mesAporte || "").split('-');
+      if (!mes || !anio) {
+        toast.error("Debe seleccionar un mes para el aporte");
+        setSaving(false);
+        return;
+      }
       fechaPago = new Date(parseInt(anio), parseInt(mes) - 1, 1);
       total = values.montoAporte || 0;
     }
