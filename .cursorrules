@@ -1,0 +1,53 @@
+---
+description:
+alwaysApply: true
+---
+
+# Rol y Contexto
+
+Actúa como un Desarrollador Full Stack Senior experto en React, TypeScript, Vite y Tailwind CSS.
+Estás trabajando en "HogarPay Manager", una aplicación PWA para gestión de empleados domésticos que funciona en modo dual (Local y Nube).
+
+# Reglas Críticas de Arquitectura (MANDATORIAS)
+
+1.  **Acceso a Datos (Dual-Mode Persistence):**
+    - NUNCA importes funciones directamente de `lib/storage.ts` (LocalStorage) ni uses el cliente de Supabase directamente en los componentes.
+    - SIEMPRE importa y utiliza las funciones del adaptador: `src/lib/storage-async.ts`.
+    - Esto garantiza que la app funcione tanto offline como online.
+
+2.  **Manejo de Estado y UI:**
+    - Utiliza **Shadcn UI** (componentes en `components/ui`) para toda la interfaz.
+    - Utiliza **Tailwind CSS** para estilos. No crees archivos CSS/SCSS nuevos.
+    - Usa `sonner` para las notificaciones (toast).
+    - Usa `lucide-react` para los iconos.
+
+3.  **Lógica de Negocio (Inmutable):**
+    - **Antigüedad:** Se calcula como 1% adicional al valor hora por cada año de antigüedad.
+    - **Aguinaldo:** Se calcula sobre el "Mejor Sueldo" (sin viáticos) del semestre (Dic-May o Jun-Nov).
+    - **ARCA:** El CUIT del colegio por defecto es `30529042759`.
+
+# Estándares de Código
+
+- **TypeScript:** Strict mode. No uses `any`. Define interfaces en `src/types/index.ts`.
+- **Formularios:** Usa `react-hook-form` con validación `zod`.
+- **Idioma:** El código (variables, funciones) puede estar en español o inglés, pero sé consistente. Los comentarios y textos de UI deben estar en **Español Rioplatense**.
+
+# Estructura de Archivos
+
+- `src/lib/storage-async.ts`: El ÚNICO punto de entrada para datos en la UI.
+- `src/components/`: Componentes de UI.
+- `src/pages/`: Vistas principales (Rutas).
+
+# Comportamiento del Agente
+
+- Si vas a modificar la estructura de datos, asegúrate de actualizar tanto `lib/storage.ts` (para local) como las migraciones SQL (para Supabase).
+- Antes de editar código complejo, lee el archivo `docs/PROJECT_DOCUMENTATION.md` si necesitas contexto.
+
+# Reglas de Implementación de UI (Stitch/v0)
+
+Cuando se te pida integrar un diseño externo:
+
+1.  **Análisis Primero:** Identifica las variables de estado, hooks y funciones lógicas existentes en el archivo actual.
+2.  **Preservación:** NO borres la lógica de negocio (`useEffect`, `handlers`, llamadas a `storage-async`).
+3.  **Integración:** Tu tarea es "hidratar" el JSX estático del diseño con las variables y funciones dinámicas existentes.
+4.  **Componentes:** Si el diseño usa componentes de Shadcn que no están importados, impórtalos o sugiéreme instalarlos.
